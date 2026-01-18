@@ -22,7 +22,7 @@ export default function Home() {
   const [error, setError] = useState(null);
   const [commodities, setCommodities] = useState(defaultCommodities);
 
-  // Fetch live data from our API
+  // Fetch live data from NSE API, fallback to Yahoo
   const fetchLiveData = useCallback(async () => {
     if (!isStreaming) return;
 
@@ -30,37 +30,86 @@ export default function Home() {
     setError(null);
 
     try {
+      // Try NSE first
       const response = await fetch('/api/indices?category=all');
       const result = await response.json();
 
       if (result.success && result.data) {
-        // Merge with fallback data (use live data where available)
+        // Only use API data if it returns MORE indices than fallback (outside trading hours API returns less)
         setIndicesData(prev => ({
-          broadMarket: result.data.broadMarket?.length > 0 ? result.data.broadMarket : prev.broadMarket,
-          sectoral: result.data.sectoral?.length > 0 ? result.data.sectoral : prev.sectoral,
-          thematic: result.data.thematic?.length > 0 ? result.data.thematic : prev.thematic,
-          strategy: result.data.strategy?.length > 0 ? result.data.strategy : prev.strategy,
+          broadMarket: (result.data.broadMarket?.length >= prev.broadMarket.length) ? result.data.broadMarket : prev.broadMarket,
+          sectoral: (result.data.sectoral?.length >= prev.sectoral.length) ? result.data.sectoral : prev.sectoral,
+          thematic: (result.data.thematic?.length >= prev.thematic.length) ? result.data.thematic : prev.thematic,
+          strategy: (result.data.strategy?.length >= prev.strategy.length) ? result.data.strategy : prev.strategy,
         }));
         setLastUpdate(new Date());
+      } else {
+        // Fallback to Yahoo Finance
+        await fetchYahooFallback();
       }
     } catch (err) {
-      console.error('Failed to fetch live data:', err);
-      setError('Using cached data');
-      // Keep using fallback data
+      console.error('NSE fetch failed, trying Yahoo:', err);
+      await fetchYahooFallback();
     } finally {
       setIsLoading(false);
     }
   }, [isStreaming]);
 
+  // Fetch commodity prices from Yahoo Finance
+  const fetchCommodities = useCallback(async () => {
+    try {
+      const response = await fetch('/api/yahoo-fallback?type=commodities');
+      const result = await response.json();
+
+      if (result.success && result.data.commodities) {
+        const yahooData = result.data.commodities;
+        setCommodities(prev => ({
+          gold: yahooData.gold || prev.gold,
+          silver: yahooData.silver || prev.silver,
+          platinum: yahooData.platinum || prev.platinum,
+        }));
+      }
+    } catch (err) {
+      console.error('Failed to fetch commodities:', err);
+    }
+  }, []);
+
+  // Yahoo Finance fallback for indices
+  const fetchYahooFallback = async () => {
+    try {
+      const response = await fetch('/api/yahoo-fallback?type=indices');
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setError('Using Yahoo data (15-min delay)');
+        setIndicesData(prev => ({
+          broadMarket: result.data.broadMarket?.length > 0 ? result.data.broadMarket : prev.broadMarket,
+          sectoral: result.data.sectoral?.length > 0 ? result.data.sectoral : prev.sectoral,
+          thematic: prev.thematic,
+          strategy: prev.strategy,
+        }));
+        setLastUpdate(new Date());
+      }
+    } catch (err) {
+      console.error('Yahoo fallback failed:', err);
+      setError('Using cached data');
+    }
+  };
+
   // Initial fetch and auto-refresh
   useEffect(() => {
     fetchLiveData();
+    fetchCommodities();
 
     if (isStreaming) {
-      const interval = setInterval(fetchLiveData, REFRESH_INTERVAL);
-      return () => clearInterval(interval);
+      const indicesInterval = setInterval(fetchLiveData, REFRESH_INTERVAL);
+      const commoditiesInterval = setInterval(fetchCommodities, 60000); // Commodities every 60s
+      return () => {
+        clearInterval(indicesInterval);
+        clearInterval(commoditiesInterval);
+      };
     }
-  }, [isStreaming, fetchLiveData]);
+  }, [isStreaming, fetchLiveData, fetchCommodities]);
 
   // Update clock
   useEffect(() => {
