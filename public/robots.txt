@@ -1,0 +1,16 @@
+# robots.txt for Indian Stock Market Heat Map
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://indianstockheatmap.com/sitemap.xml
+
+# Disallow API routes
+Disallow: /api/
+
+# Allow search engines to crawl all pages
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /

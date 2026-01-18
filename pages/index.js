@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
+import Link from 'next/link';
 import HeatMap from '../components/HeatMap';
+import AdBanner from '../components/AdBanner';
+import BrokerAffiliates from '../components/BrokerAffiliates';
 import { indicesData as fallbackData, commodityPrices as defaultCommodities, formatCurrency } from '../lib/stockData';
 
 const categories = [
@@ -222,6 +225,11 @@ export default function Home() {
           <div className="legend-item lg-n5">-5</div>
         </div>
 
+        {/* Top Ad Banner */}
+        <div className="ad-container">
+          <AdBanner slot="1234567890" format="horizontal" style={{ minHeight: '90px' }} />
+        </div>
+
         {/* Main Content */}
         <div className="main-content">
           {/* Sidebar */}
@@ -248,6 +256,16 @@ export default function Home() {
           </main>
         </div>
 
+        {/* Broker Affiliates Section */}
+        <div className="affiliates-section">
+          <BrokerAffiliates />
+        </div>
+
+        {/* Bottom Ad Banner */}
+        <div className="ad-container">
+          <AdBanner slot="0987654321" format="horizontal" style={{ minHeight: '90px' }} />
+        </div>
+
         {/* Footer Note */}
         <footer className="footer">
           <div className="note">
@@ -259,6 +277,12 @@ export default function Home() {
               <p className="last-update">Last updated: {lastUpdate.toLocaleTimeString('en-IN')}</p>
             )}
           </div>
+          <div className="footer-links">
+            <Link href="/privacy">Privacy Policy</Link>
+            <Link href="/terms">Terms of Service</Link>
+            <Link href="/contact">Contact Us</Link>
+          </div>
+          <p className="copyright">© 2026 Indian Stock Market Heat Map. All rights reserved.</p>
         </footer>
       </div>
 
@@ -537,8 +561,19 @@ export default function Home() {
           overflow-x: auto;
         }
 
+        .ad-container {
+          padding: 12px 24px;
+          background: #f5f5f5;
+          border-bottom: 1px solid #e0e0e0;
+        }
+
+        .affiliates-section {
+          padding: 0 24px;
+          background: #fafafa;
+        }
+
         .footer {
-          padding: 16px 24px;
+          padding: 24px;
           background: white;
           border-top: 1px solid #e0e0e0;
         }
@@ -546,6 +581,7 @@ export default function Home() {
         .note {
           font-size: 12px;
           color: #666;
+          margin-bottom: 16px;
         }
 
         .note strong {
@@ -564,6 +600,27 @@ export default function Home() {
         .last-update {
           color: #4caf50;
           font-weight: 500;
+        }
+
+        .footer-links {
+          display: flex;
+          gap: 24px;
+          margin-bottom: 12px;
+        }
+
+        .footer-links :global(a) {
+          color: #1976d2;
+          text-decoration: none;
+          font-size: 14px;
+        }
+
+        .footer-links :global(a:hover) {
+          text-decoration: underline;
+        }
+
+        .copyright {
+          font-size: 12px;
+          color: #999;
         }
 
         @media (max-width: 768px) {
