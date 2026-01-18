@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import HeatMap from '../components/HeatMap';
-import { indicesData } from '../lib/stockData';
+import { indicesData as fallbackData } from '../lib/stockData';
 
 const categories = [
   { id: 'broadMarket', label: 'Broad Market Indices' },
@@ -10,10 +10,58 @@ const categories = [
   { id: 'strategy', label: 'Strategy Indices' },
 ];
 
+const REFRESH_INTERVAL = 30000; // 30 seconds
+
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState('broadMarket');
   const [currentTime, setCurrentTime] = useState('');
+  const [indicesData, setIndicesData] = useState(fallbackData);
+  const [isStreaming, setIsStreaming] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
+  // Fetch live data from our API
+  const fetchLiveData = useCallback(async () => {
+    if (!isStreaming) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/indices?category=all');
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        // Merge with fallback data (use live data where available)
+        setIndicesData(prev => ({
+          broadMarket: result.data.broadMarket?.length > 0 ? result.data.broadMarket : prev.broadMarket,
+          sectoral: result.data.sectoral?.length > 0 ? result.data.sectoral : prev.sectoral,
+          thematic: result.data.thematic?.length > 0 ? result.data.thematic : prev.thematic,
+          strategy: result.data.strategy?.length > 0 ? result.data.strategy : prev.strategy,
+        }));
+        setLastUpdate(new Date());
+      }
+    } catch (err) {
+      console.error('Failed to fetch live data:', err);
+      setError('Using cached data');
+      // Keep using fallback data
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isStreaming]);
+
+  // Initial fetch and auto-refresh
+  useEffect(() => {
+    fetchLiveData();
+
+    if (isStreaming) {
+      const interval = setInterval(fetchLiveData, REFRESH_INTERVAL);
+      return () => clearInterval(interval);
+    }
+  }, [isStreaming, fetchLiveData]);
+
+  // Update clock
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -39,14 +87,14 @@ export default function Home() {
   return (
     <>
       <Head>
-        <title>Indian Stock Market Heat Map - Free NSE BSE Indices | Nifty Sensex Live</title>
-        <meta name="description" content="Free Indian stock market heat map. Track Nifty 50, Bank Nifty, sectoral indices live. NSE BSE real-time data visualization with hover details." />
-        <meta name="keywords" content="nifty heat map, indian stock market, nse indices, bse sensex, bank nifty, sectoral indices, nifty 50 live, stock market india" />
+        <title>Indian Stock Market Heat Map - Free NSE BSE Live Indices | Nifty Sensex</title>
+        <meta name="description" content="Free real-time Indian stock market heat map. Track Nifty 50, Bank Nifty, sectoral indices live. NSE BSE data visualization with auto-refresh." />
+        <meta name="keywords" content="nifty heat map, indian stock market, nse indices, bse sensex, bank nifty, sectoral indices, nifty 50 live, stock market india, live market data" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://indianstockheatmap.com" />
         <meta property="og:title" content="Indian Stock Market Heat Map - NSE BSE Live" />
-        <meta property="og:description" content="Free heat map for Indian indices. Track Nifty, Bank Nifty, sectors live." />
+        <meta property="og:description" content="Free real-time heat map for Indian indices. Track Nifty, Bank Nifty, sectors live." />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="en_IN" />
         <meta name="twitter:card" content="summary_large_image" />
@@ -65,19 +113,25 @@ export default function Home() {
           <div className="header-center">
             <span className="streaming-label">Streaming</span>
             <label className="toggle">
-              <input type="checkbox" defaultChecked />
+              <input
+                type="checkbox"
+                checked={isStreaming}
+                onChange={(e) => setIsStreaming(e.target.checked)}
+              />
               <span className="toggle-slider"></span>
             </label>
-            <span className="toggle-text">On</span>
+            <span className="toggle-text">{isStreaming ? 'On' : 'Off'}</span>
+            {isLoading && <span className="loading-indicator">⟳</span>}
           </div>
           <div className="header-right">
             <span className="timestamp">As on {currentTime}</span>
-            <span className="live-dot"></span>
+            <span className={`live-dot ${isStreaming ? 'active' : ''}`}></span>
           </div>
         </header>
 
         {/* Color Legend */}
         <div className="legend-bar">
+          {error && <span className="error-badge">{error}</span>}
           <div className="legend-item lg-5">5</div>
           <div className="legend-item lg-3">3</div>
           <div className="legend-item lg-1">1</div>
@@ -117,8 +171,12 @@ export default function Home() {
         <footer className="footer">
           <div className="note">
             <strong>Note</strong>
-            <p>- The heatmap displays up to 50 symbols irrespective of the total number of constituents in the index.</p>
+            <p>- Data refreshes every 30 seconds when streaming is on.</p>
+            <p>- The heatmap displays up to 50 symbols per category.</p>
             <p>- Data is for educational purposes only. Not financial advice.</p>
+            {lastUpdate && (
+              <p className="last-update">Last updated: {lastUpdate.toLocaleTimeString('en-IN')}</p>
+            )}
           </div>
         </footer>
       </div>
@@ -224,6 +282,17 @@ export default function Home() {
           font-size: 14px;
         }
 
+        .loading-indicator {
+          animation: spin 1s linear infinite;
+          font-size: 18px;
+          margin-left: 8px;
+        }
+
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+
         .header-right {
           display: flex;
           align-items: center;
@@ -238,8 +307,12 @@ export default function Home() {
         .live-dot {
           width: 12px;
           height: 12px;
-          background: #4caf50;
+          background: #ccc;
           border-radius: 50%;
+        }
+
+        .live-dot.active {
+          background: #4caf50;
           animation: pulse 2s infinite;
         }
 
@@ -251,10 +324,20 @@ export default function Home() {
         .legend-bar {
           display: flex;
           justify-content: flex-end;
+          align-items: center;
           gap: 4px;
           padding: 8px 24px;
           background: white;
           border-bottom: 1px solid #e0e0e0;
+        }
+
+        .error-badge {
+          background: #fff3cd;
+          color: #856404;
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 12px;
+          margin-right: auto;
         }
 
         .legend-item {
@@ -344,6 +427,11 @@ export default function Home() {
           margin: 2px 0;
         }
 
+        .last-update {
+          color: #4caf50;
+          font-weight: 500;
+        }
+
         @media (max-width: 768px) {
           .header {
             padding: 12px 16px;
@@ -359,6 +447,12 @@ export default function Home() {
             justify-content: center;
             flex-wrap: wrap;
             padding: 8px 12px;
+          }
+
+          .error-badge {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 8px;
           }
 
           .legend-item {
