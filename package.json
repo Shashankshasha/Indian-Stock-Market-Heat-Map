@@ -1,13 +1,18 @@
 {
   "name": "indian-stock-market-heat-map",
   "version": "1.0.0",
-  "description": "A heat map visualization for Indian stock market sectors",
-  "main": "src/index.js",
+  "description": "Free Indian Stock Market Heat Map - NSE & BSE Sectors",
   "scripts": {
-    "start": "node src/index.js",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "test": "node src/test.js"
   },
-  "keywords": ["stocks", "heat-map", "india", "nse", "bse"],
+  "keywords": ["nifty", "sensex", "heat-map", "india", "nse", "bse", "stock-market"],
   "license": "MIT",
-  "dependencies": {}
+  "dependencies": {
+    "next": "^14.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
 }
