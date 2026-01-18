@@ -1,231 +1,404 @@
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import HeatMap from '../components/HeatMap';
-import { nifty50Stocks, getSectorStats } from '../lib/stockData';
+import { indicesData } from '../lib/stockData';
+
+const categories = [
+  { id: 'broadMarket', label: 'Broad Market Indices' },
+  { id: 'sectoral', label: 'Sectoral Indices' },
+  { id: 'thematic', label: 'Thematic Indices' },
+  { id: 'strategy', label: 'Strategy Indices' },
+];
 
 export default function Home() {
-  const sectorStats = getSectorStats(nifty50Stocks);
-  const gainers = nifty50Stocks.filter(s => s.change > 0).length;
-  const losers = nifty50Stocks.filter(s => s.change < 0).length;
-  const avgChange = (nifty50Stocks.reduce((sum, s) => sum + s.change, 0) / nifty50Stocks.length).toFixed(2);
+  const [activeCategory, setActiveCategory] = useState('broadMarket');
+  const [currentTime, setCurrentTime] = useState('');
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const options = {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Kolkata'
+      };
+      setCurrentTime(now.toLocaleString('en-IN', options) + ' IST');
+    };
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const activeData = indicesData[activeCategory] || [];
 
   return (
     <>
       <Head>
-        <title>Indian Stock Market Heat Map - Free Nifty 50 & Sector Analysis | NSE BSE</title>
-        <meta name="description" content="Free real-time Indian stock market heat map. Track Nifty 50 stocks, sector performance, gainers & losers. NSE BSE live data visualization." />
-        <meta name="keywords" content="nifty 50 heat map, indian stock market, nse heat map, bse stocks, sector analysis, stock market india, sensex, nifty today" />
+        <title>Indian Stock Market Heat Map - Free NSE BSE Indices | Nifty Sensex Live</title>
+        <meta name="description" content="Free Indian stock market heat map. Track Nifty 50, Bank Nifty, sectoral indices live. NSE BSE real-time data visualization with hover details." />
+        <meta name="keywords" content="nifty heat map, indian stock market, nse indices, bse sensex, bank nifty, sectoral indices, nifty 50 live, stock market india" />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://indianstockheatmap.com" />
-
-        {/* Open Graph */}
-        <meta property="og:title" content="Indian Stock Market Heat Map - Free Nifty 50 Analysis" />
-        <meta property="og:description" content="Track Indian stocks visually. Free heat map for Nifty 50, sectors, gainers & losers." />
+        <meta property="og:title" content="Indian Stock Market Heat Map - NSE BSE Live" />
+        <meta property="og:description" content="Free heat map for Indian indices. Track Nifty, Bank Nifty, sectors live." />
         <meta property="og:type" content="website" />
         <meta property="og:locale" content="en_IN" />
-
-        {/* Twitter */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Indian Stock Market Heat Map" />
-        <meta name="twitter:description" content="Free visual stock tracker for NSE & BSE" />
-
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <div className="container">
+      <div className="app">
+        {/* Header */}
         <header className="header">
-          <h1>Indian Stock Market Heat Map</h1>
-          <p className="subtitle">Nifty 50 - Live Sector Performance</p>
+          <div className="header-left">
+            <div className="logo">
+              <span className="logo-icon">📊</span>
+              <span className="logo-text">Stock Heat Map</span>
+            </div>
+          </div>
+          <div className="header-center">
+            <span className="streaming-label">Streaming</span>
+            <label className="toggle">
+              <input type="checkbox" defaultChecked />
+              <span className="toggle-slider"></span>
+            </label>
+            <span className="toggle-text">On</span>
+          </div>
+          <div className="header-right">
+            <span className="timestamp">As on {currentTime}</span>
+            <span className="live-dot"></span>
+          </div>
         </header>
 
-        <div className="stats-bar">
-          <div className="stat">
-            <span className="stat-label">Stocks</span>
-            <span className="stat-value">{nifty50Stocks.length}</span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">Gainers</span>
-            <span className="stat-value positive">{gainers}</span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">Losers</span>
-            <span className="stat-value negative">{losers}</span>
-          </div>
-          <div className="stat">
-            <span className="stat-label">Avg Change</span>
-            <span className={`stat-value ${parseFloat(avgChange) >= 0 ? 'positive' : 'negative'}`}>
-              {avgChange}%
-            </span>
-          </div>
+        {/* Color Legend */}
+        <div className="legend-bar">
+          <div className="legend-item lg-5">5</div>
+          <div className="legend-item lg-3">3</div>
+          <div className="legend-item lg-1">1</div>
+          <div className="legend-item lg-0">0%</div>
+          <div className="legend-item lg-n1">-1</div>
+          <div className="legend-item lg-n3">-3</div>
+          <div className="legend-item lg-n5">-5</div>
         </div>
 
-        <main>
-          <HeatMap stocks={nifty50Stocks} />
-        </main>
+        {/* Main Content */}
+        <div className="main-content">
+          {/* Sidebar */}
+          <aside className="sidebar">
+            <nav className="nav-menu">
+              {categories.map((cat) => (
+                <button
+                  key={cat.id}
+                  className={`nav-item ${activeCategory === cat.id ? 'active' : ''}`}
+                  onClick={() => setActiveCategory(cat.id)}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </nav>
+          </aside>
 
-        <section className="info-section">
-          <h2>How to Read the Heat Map</h2>
-          <div className="color-legend">
-            <div className="legend-item">
-              <span className="legend-color" style={{ background: '#006400' }}></span>
-              <span>+3% or more</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-color" style={{ background: '#32CD32' }}></span>
-              <span>+1% to +3%</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-color" style={{ background: '#90EE90' }}></span>
-              <span>0% to +1%</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-color" style={{ background: '#FFB6C1' }}></span>
-              <span>0% to -1%</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-color" style={{ background: '#FF4500' }}></span>
-              <span>-1% to -3%</span>
-            </div>
-            <div className="legend-item">
-              <span className="legend-color" style={{ background: '#8B0000' }}></span>
-              <span>-3% or worse</span>
-            </div>
-          </div>
-        </section>
+          {/* Heat Map Area */}
+          <main className="content">
+            <HeatMap
+              data={activeData}
+              title={categories.find(c => c.id === activeCategory)?.label}
+            />
+          </main>
+        </div>
 
+        {/* Footer Note */}
         <footer className="footer">
-          <p>Data for educational purposes. Not financial advice.</p>
-          <p>&copy; 2024 Indian Stock Heat Map</p>
+          <div className="note">
+            <strong>Note</strong>
+            <p>- The heatmap displays up to 50 symbols irrespective of the total number of constituents in the index.</p>
+            <p>- Data is for educational purposes only. Not financial advice.</p>
+          </div>
         </footer>
       </div>
 
       <style jsx>{`
-        .container {
+        .app {
           min-height: 100vh;
-          background: linear-gradient(135deg, #0f0f1a 0%, #1a1a2e 100%);
-          color: #ffffff;
+          background: #fafafa;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
         .header {
-          text-align: center;
-          padding: 24px 16px 8px;
-        }
-
-        h1 {
-          font-size: 24px;
-          margin: 0;
-          background: linear-gradient(90deg, #4ade80, #22d3ee);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-
-        .subtitle {
-          color: #9ca3af;
-          font-size: 14px;
-          margin: 4px 0 0;
-        }
-
-        .stats-bar {
           display: flex;
-          justify-content: center;
-          gap: 16px;
-          padding: 16px;
-          flex-wrap: wrap;
-        }
-
-        .stat {
-          display: flex;
-          flex-direction: column;
           align-items: center;
-          background: rgba(255, 255, 255, 0.05);
-          padding: 12px 20px;
-          border-radius: 8px;
-          min-width: 80px;
-        }
-
-        .stat-label {
-          font-size: 11px;
-          color: #9ca3af;
-          text-transform: uppercase;
-        }
-
-        .stat-value {
-          font-size: 20px;
-          font-weight: 700;
-        }
-
-        .stat-value.positive {
-          color: #4ade80;
-        }
-
-        .stat-value.negative {
-          color: #f87171;
-        }
-
-        main {
-          padding: 0 8px;
-        }
-
-        .info-section {
-          padding: 24px 16px;
-          max-width: 800px;
-          margin: 0 auto;
-        }
-
-        .info-section h2 {
-          font-size: 18px;
-          margin-bottom: 16px;
-          color: #e0e0e0;
-        }
-
-        .color-legend {
-          display: flex;
+          justify-content: space-between;
+          padding: 12px 24px;
+          background: white;
+          border-bottom: 1px solid #e0e0e0;
           flex-wrap: wrap;
           gap: 12px;
         }
 
-        .legend-item {
+        .header-left {
+          display: flex;
+          align-items: center;
+        }
+
+        .logo {
           display: flex;
           align-items: center;
           gap: 8px;
-          font-size: 12px;
-          color: #9ca3af;
         }
 
-        .legend-color {
-          width: 20px;
-          height: 20px;
-          border-radius: 4px;
+        .logo-icon {
+          font-size: 24px;
+        }
+
+        .logo-text {
+          font-size: 18px;
+          font-weight: 700;
+          color: #333;
+        }
+
+        .header-center {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .streaming-label {
+          color: #666;
+          font-size: 14px;
+        }
+
+        .toggle {
+          position: relative;
+          display: inline-block;
+          width: 44px;
+          height: 24px;
+        }
+
+        .toggle input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+
+        .toggle-slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: #ccc;
+          border-radius: 24px;
+          transition: 0.3s;
+        }
+
+        .toggle-slider::before {
+          position: absolute;
+          content: '';
+          height: 18px;
+          width: 18px;
+          left: 3px;
+          bottom: 3px;
+          background: white;
+          border-radius: 50%;
+          transition: 0.3s;
+        }
+
+        .toggle input:checked + .toggle-slider {
+          background: #4caf50;
+        }
+
+        .toggle input:checked + .toggle-slider::before {
+          transform: translateX(20px);
+        }
+
+        .toggle-text {
+          color: #4caf50;
+          font-weight: 600;
+          font-size: 14px;
+        }
+
+        .header-right {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .timestamp {
+          color: #333;
+          font-size: 14px;
+        }
+
+        .live-dot {
+          width: 12px;
+          height: 12px;
+          background: #4caf50;
+          border-radius: 50%;
+          animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+
+        .legend-bar {
+          display: flex;
+          justify-content: flex-end;
+          gap: 4px;
+          padding: 8px 24px;
+          background: white;
+          border-bottom: 1px solid #e0e0e0;
+        }
+
+        .legend-item {
+          padding: 4px 12px;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          color: white;
+        }
+
+        .lg-5 { background: #1b5e20; }
+        .lg-3 { background: #2e7d32; }
+        .lg-1 { background: #4caf50; }
+        .lg-0 { background: #81c784; }
+        .lg-n1 { background: #ef5350; }
+        .lg-n3 { background: #d32f2f; }
+        .lg-n5 { background: #b71c1c; }
+
+        .main-content {
+          display: flex;
+          min-height: calc(100vh - 180px);
+        }
+
+        .sidebar {
+          width: 220px;
+          background: white;
+          border-right: 1px solid #e0e0e0;
+          padding: 16px 0;
+          flex-shrink: 0;
+        }
+
+        .nav-menu {
+          display: flex;
+          flex-direction: column;
+        }
+
+        .nav-item {
+          padding: 12px 20px;
+          text-align: left;
+          background: none;
+          border: none;
+          border-left: 3px solid transparent;
+          cursor: pointer;
+          font-size: 14px;
+          color: #333;
+          transition: all 0.2s;
+        }
+
+        .nav-item:hover {
+          background: #f5f5f5;
+        }
+
+        .nav-item.active {
+          border-left-color: #d32f2f;
+          color: #d32f2f;
+          font-weight: 600;
+          background: #fff5f5;
+        }
+
+        .content {
+          flex: 1;
+          padding: 20px;
+          overflow-x: auto;
         }
 
         .footer {
-          text-align: center;
-          padding: 24px 16px;
-          color: #6b7280;
+          padding: 16px 24px;
+          background: white;
+          border-top: 1px solid #e0e0e0;
+        }
+
+        .note {
           font-size: 12px;
+          color: #666;
         }
 
-        .footer p {
-          margin: 4px 0;
+        .note strong {
+          display: block;
+          margin-bottom: 4px;
+          color: #333;
+          border-bottom: 2px solid #1976d2;
+          width: fit-content;
+          padding-bottom: 2px;
         }
 
-        @media (max-width: 480px) {
-          h1 {
-            font-size: 20px;
+        .note p {
+          margin: 2px 0;
+        }
+
+        @media (max-width: 768px) {
+          .header {
+            padding: 12px 16px;
           }
 
-          .stats-bar {
-            gap: 8px;
+          .header-center {
+            order: 3;
+            width: 100%;
+            justify-content: center;
           }
 
-          .stat {
+          .legend-bar {
+            justify-content: center;
+            flex-wrap: wrap;
             padding: 8px 12px;
-            min-width: 70px;
           }
 
-          .stat-value {
-            font-size: 16px;
+          .legend-item {
+            padding: 4px 8px;
+            font-size: 10px;
+          }
+
+          .main-content {
+            flex-direction: column;
+          }
+
+          .sidebar {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 8px;
+          }
+
+          .nav-menu {
+            flex-direction: row;
+            overflow-x: auto;
+            gap: 4px;
+          }
+
+          .nav-item {
+            flex-shrink: 0;
+            padding: 8px 12px;
+            border-left: none;
+            border-bottom: 2px solid transparent;
+            font-size: 12px;
+            white-space: nowrap;
+          }
+
+          .nav-item.active {
+            border-left: none;
+            border-bottom-color: #d32f2f;
+          }
+
+          .content {
+            padding: 12px;
           }
         }
       `}</style>

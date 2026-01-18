@@ -1,148 +1,197 @@
-import { getStockColor, getTextColor, getSectorStats } from '../lib/stockData';
+import { useState } from 'react';
+import { getTileColor, formatNumber, formatPercent } from '../lib/stockData';
 
-export default function HeatMap({ stocks }) {
-  const sectorData = getSectorStats(stocks);
-  const totalMarketCap = sectorData.reduce((sum, s) => sum + s.totalMarketCap, 0);
+export default function HeatMap({ data, title }) {
+  const [hoveredIndex, setHoveredIndex] = useState(null);
 
   return (
-    <div className="heatmap-container">
-      {sectorData.map((sector) => {
-        const sectorWidth = (sector.totalMarketCap / totalMarketCap) * 100;
+    <div className="heatmap">
+      {title && <h2 className="section-title">{title} ({data.length})</h2>}
 
-        return (
+      <div className="tiles-grid">
+        {data.map((item, index) => (
           <div
-            key={sector.name}
-            className="sector-group"
-            style={{ flex: `0 0 ${Math.max(sectorWidth, 15)}%` }}
+            key={item.symbol}
+            className="tile"
+            style={{ backgroundColor: getTileColor(item.change) }}
+            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseLeave={() => setHoveredIndex(null)}
           >
-            <div className="sector-header">
-              <span className="sector-name">{sector.name}</span>
-              <span className={`sector-change ${sector.avgChange >= 0 ? 'positive' : 'negative'}`}>
-                {sector.avgChange >= 0 ? '+' : ''}{sector.avgChange.toFixed(2)}%
-              </span>
-            </div>
-            <div className="stocks-grid">
-              {sector.stocks
-                .sort((a, b) => b.marketCap - a.marketCap)
-                .map((stock) => {
-                  const bgColor = getStockColor(stock.change);
-                  const textColor = getTextColor(stock.change);
+            <div className="tile-symbol">{item.symbol}</div>
+            <div className="tile-value">{formatNumber(item.value)}</div>
+            <div className="tile-change">{formatPercent(item.change)}</div>
 
-                  return (
-                    <div
-                      key={stock.symbol}
-                      className="stock-cell"
-                      style={{
-                        backgroundColor: bgColor,
-                        color: textColor
-                      }}
-                    >
-                      <div className="stock-symbol">{stock.symbol}</div>
-                      <div className="stock-change">
-                        {stock.change >= 0 ? '+' : ''}{stock.change.toFixed(2)}%
-                      </div>
-                      <div className="stock-price">₹{stock.price.toLocaleString('en-IN')}</div>
-                    </div>
-                  );
-                })}
-            </div>
+            {hoveredIndex === index && (
+              <div className="tooltip">
+                <div className="tooltip-title">{item.symbol}</div>
+                <table className="tooltip-table">
+                  <tbody>
+                    <tr>
+                      <td>Current</td>
+                      <td>{formatNumber(item.value)}</td>
+                    </tr>
+                    <tr>
+                      <td>Open</td>
+                      <td>{formatNumber(item.open)}</td>
+                    </tr>
+                    <tr>
+                      <td>High</td>
+                      <td>{formatNumber(item.high)}</td>
+                    </tr>
+                    <tr>
+                      <td>Low</td>
+                      <td>{formatNumber(item.low)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        );
-      })}
+        ))}
+      </div>
 
       <style jsx>{`
-        .heatmap-container {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 8px;
-          padding: 8px;
+        .heatmap {
+          width: 100%;
         }
 
-        .sector-group {
-          min-width: 150px;
-          background: #1a1a2e;
-          border-radius: 8px;
-          overflow: hidden;
-        }
-
-        .sector-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 8px 12px;
-          background: #16213e;
-          border-bottom: 1px solid #0f3460;
-        }
-
-        .sector-name {
+        .section-title {
+          font-size: 16px;
           font-weight: 600;
-          font-size: 12px;
-          color: #e0e0e0;
-          text-transform: uppercase;
+          color: #d32f2f;
+          margin-bottom: 16px;
+          padding-left: 8px;
+          border-left: 3px solid #d32f2f;
         }
 
-        .sector-change {
-          font-size: 12px;
-          font-weight: 700;
-        }
-
-        .sector-change.positive {
-          color: #4ade80;
-        }
-
-        .sector-change.negative {
-          color: #f87171;
-        }
-
-        .stocks-grid {
+        .tiles-grid {
           display: grid;
-          grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-          gap: 4px;
-          padding: 8px;
+          grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+          gap: 8px;
         }
 
-        .stock-cell {
-          padding: 8px;
+        .tile {
+          position: relative;
+          padding: 12px;
           border-radius: 4px;
-          text-align: center;
+          color: white;
           cursor: pointer;
-          transition: transform 0.2s, box-shadow 0.2s;
+          transition: transform 0.15s, box-shadow 0.15s;
+          min-height: 80px;
         }
 
-        .stock-cell:hover {
-          transform: scale(1.05);
+        .tile:hover {
+          transform: translateY(-2px);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-          z-index: 10;
+          z-index: 100;
         }
 
-        .stock-symbol {
-          font-weight: 700;
-          font-size: 11px;
+        .tile-symbol {
+          font-size: 12px;
+          font-weight: 600;
+          margin-bottom: 4px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .tile-value {
+          font-size: 13px;
+          font-weight: 500;
           margin-bottom: 2px;
         }
 
-        .stock-change {
+        .tile-change {
           font-size: 13px;
           font-weight: 600;
         }
 
-        .stock-price {
-          font-size: 9px;
-          opacity: 0.9;
-          margin-top: 2px;
+        .tooltip {
+          position: absolute;
+          top: 100%;
+          left: 50%;
+          transform: translateX(-50%);
+          background: white;
+          color: #333;
+          padding: 12px;
+          border-radius: 8px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+          z-index: 1000;
+          min-width: 180px;
+          margin-top: 8px;
+        }
+
+        .tooltip::before {
+          content: '';
+          position: absolute;
+          top: -6px;
+          left: 50%;
+          transform: translateX(-50%);
+          border-left: 6px solid transparent;
+          border-right: 6px solid transparent;
+          border-bottom: 6px solid white;
+        }
+
+        .tooltip-title {
+          font-size: 14px;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 8px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid #eee;
+        }
+
+        .tooltip-table {
+          width: 100%;
+          font-size: 12px;
+        }
+
+        .tooltip-table td {
+          padding: 4px 0;
+        }
+
+        .tooltip-table td:first-child {
+          color: #666;
+        }
+
+        .tooltip-table td:last-child {
+          text-align: right;
+          font-weight: 500;
         }
 
         @media (max-width: 768px) {
-          .heatmap-container {
-            flex-direction: column;
+          .tiles-grid {
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 6px;
           }
 
-          .sector-group {
-            flex: 1 1 100% !important;
+          .tile {
+            padding: 10px;
+            min-height: 70px;
           }
 
-          .stocks-grid {
-            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+          .tile-symbol {
+            font-size: 10px;
+          }
+
+          .tile-value {
+            font-size: 11px;
+          }
+
+          .tile-change {
+            font-size: 11px;
+          }
+
+          .tooltip {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin-top: 0;
+          }
+
+          .tooltip::before {
+            display: none;
           }
         }
       `}</style>
