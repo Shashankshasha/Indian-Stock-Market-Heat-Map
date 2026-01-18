@@ -1,5 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function Terms() {
   return (
@@ -10,12 +12,7 @@ export default function Terms() {
       </Head>
 
       <div className="page">
-        <header className="header">
-          <Link href="/" className="logo">
-            <span className="logo-icon">📊</span>
-            <span className="logo-text">Stock Heat Map</span>
-          </Link>
-        </header>
+        <Header />
 
         <main className="content">
           <h1>Terms of Service</h1>
@@ -88,11 +85,7 @@ export default function Terms() {
           </section>
         </main>
 
-        <footer className="footer">
-          <Link href="/">Home</Link>
-          <Link href="/privacy">Privacy Policy</Link>
-          <Link href="/contact">Contact</Link>
-        </footer>
+        <Footer />
       </div>
 
       <style jsx>{`

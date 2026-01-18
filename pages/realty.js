@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 // Top Real Estate Stocks (Nifty Realty Index)
 const realtyStocks = [
@@ -74,16 +75,7 @@ export default function RealtyPage() {
 
       <div className="page">
         {/* Header */}
-        <header className="header">
-          <Link href="/" className="logo">
-            <span className="logo-icon">📊</span>
-            <span className="logo-text">Stock Heat Map</span>
-          </Link>
-          <nav className="nav">
-            <Link href="/">Indices</Link>
-            <Link href="/realty" className="active">Realty</Link>
-          </nav>
-        </header>
+        <Header />
 
         {/* Hero Section */}
         <div className="hero">
@@ -189,16 +181,8 @@ export default function RealtyPage() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="footer">
-          <div className="footer-links">
-            <Link href="/">Home</Link>
-            <Link href="/privacy">Privacy Policy</Link>
-            <Link href="/terms">Terms</Link>
-            <Link href="/contact">Contact</Link>
-          </div>
-          <p className="copyright">© 2026 Indian Stock Market Heat Map</p>
-        </footer>
+        {/* Footer with Broker Links */}
+        <Footer />
       </div>
 
       <style jsx>{`

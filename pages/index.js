@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
 import HeatMap from '../components/HeatMap';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 import AdBanner from '../components/AdBanner';
 import BrokerAffiliates from '../components/BrokerAffiliates';
 import { indicesData as fallbackData, commodityPrices as defaultCommodities, formatCurrency } from '../lib/stockData';
@@ -156,35 +157,13 @@ export default function Home() {
 
       <div className="app">
         {/* Header */}
-        <header className="header">
-          <div className="header-left">
-            <div className="logo">
-              <span className="logo-icon">📊</span>
-              <span className="logo-text">Stock Heat Map</span>
-            </div>
-            <nav className="main-nav">
-              <Link href="/" className="nav-link active">Indices</Link>
-              <Link href="/realty" className="nav-link">Realty</Link>
-            </nav>
-          </div>
-          <div className="header-center">
-            <span className="streaming-label">Streaming</span>
-            <label className="toggle">
-              <input
-                type="checkbox"
-                checked={isStreaming}
-                onChange={(e) => setIsStreaming(e.target.checked)}
-              />
-              <span className="toggle-slider"></span>
-            </label>
-            <span className="toggle-text">{isStreaming ? 'On' : 'Off'}</span>
-            {isLoading && <span className="loading-indicator">⟳</span>}
-          </div>
-          <div className="header-right">
-            <span className="timestamp">As on {currentTime}</span>
-            <span className={`live-dot ${isStreaming ? 'active' : ''}`}></span>
-          </div>
-        </header>
+        <Header
+          showStreaming={true}
+          isStreaming={isStreaming}
+          setIsStreaming={setIsStreaming}
+          isLoading={isLoading}
+          currentTime={currentTime}
+        />
 
         {/* Commodity Prices Ticker */}
         <div className="commodity-ticker">
@@ -270,24 +249,18 @@ export default function Home() {
           <AdBanner slot="0987654321" format="horizontal" style={{ minHeight: '90px' }} />
         </div>
 
-        {/* Footer Note */}
-        <footer className="footer">
-          <div className="note">
-            <strong>Note</strong>
-            <p>- Data refreshes every 30 seconds when streaming is on.</p>
-            <p>- The heatmap displays up to 50 symbols per category.</p>
-            <p>- Data is for educational purposes only. Not financial advice.</p>
-            {lastUpdate && (
-              <p className="last-update">Last updated: {lastUpdate.toLocaleTimeString('en-IN')}</p>
-            )}
-          </div>
-          <div className="footer-links">
-            <Link href="/privacy">Privacy Policy</Link>
-            <Link href="/terms">Terms of Service</Link>
-            <Link href="/contact">Contact Us</Link>
-          </div>
-          <p className="copyright">© 2026 Indian Stock Market Heat Map. All rights reserved.</p>
-        </footer>
+        {/* Note Section */}
+        <div className="note-section">
+          <strong>Note</strong>
+          <p>- Data refreshes every 30 seconds when streaming is on.</p>
+          <p>- The heatmap displays up to 50 symbols per category.</p>
+          {lastUpdate && (
+            <p className="last-update">Last updated: {lastUpdate.toLocaleTimeString('en-IN')}</p>
+          )}
+        </div>
+
+        {/* Footer with Broker Links */}
+        <Footer />
       </div>
 
       <style jsx>{`
