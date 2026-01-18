@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import HeatMap from '../components/HeatMap';
-import { indicesData as fallbackData } from '../lib/stockData';
+import { indicesData as fallbackData, commodityPrices as defaultCommodities, formatCurrency } from '../lib/stockData';
 
 const categories = [
   { id: 'broadMarket', label: 'Broad Market Indices' },
@@ -20,6 +20,7 @@ export default function Home() {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [commodities, setCommodities] = useState(defaultCommodities);
 
   // Fetch live data from our API
   const fetchLiveData = useCallback(async () => {
@@ -129,6 +130,37 @@ export default function Home() {
           </div>
         </header>
 
+        {/* Commodity Prices Ticker */}
+        <div className="commodity-ticker">
+          <div className="commodity-item">
+            <span className="commodity-icon">🥇</span>
+            <span className="commodity-name">GOLD</span>
+            <span className="commodity-price">{formatCurrency(commodities.gold.price)}</span>
+            <span className={`commodity-change ${commodities.gold.change >= 0 ? 'positive' : 'negative'}`}>
+              {commodities.gold.change >= 0 ? '+' : ''}{commodities.gold.change.toFixed(2)}%
+            </span>
+            <span className="commodity-unit">/{commodities.gold.unit}</span>
+          </div>
+          <div className="commodity-item">
+            <span className="commodity-icon">🥈</span>
+            <span className="commodity-name">SILVER</span>
+            <span className="commodity-price">{formatCurrency(commodities.silver.price)}</span>
+            <span className={`commodity-change ${commodities.silver.change >= 0 ? 'positive' : 'negative'}`}>
+              {commodities.silver.change >= 0 ? '+' : ''}{commodities.silver.change.toFixed(2)}%
+            </span>
+            <span className="commodity-unit">/{commodities.silver.unit}</span>
+          </div>
+          <div className="commodity-item">
+            <span className="commodity-icon">💎</span>
+            <span className="commodity-name">PLATINUM</span>
+            <span className="commodity-price">{formatCurrency(commodities.platinum.price)}</span>
+            <span className={`commodity-change ${commodities.platinum.change >= 0 ? 'positive' : 'negative'}`}>
+              {commodities.platinum.change >= 0 ? '+' : ''}{commodities.platinum.change.toFixed(2)}%
+            </span>
+            <span className="commodity-unit">/{commodities.platinum.unit}</span>
+          </div>
+        </div>
+
         {/* Color Legend */}
         <div className="legend-bar">
           {error && <span className="error-badge">{error}</span>}
@@ -197,6 +229,59 @@ export default function Home() {
           border-bottom: 1px solid #e0e0e0;
           flex-wrap: wrap;
           gap: 12px;
+        }
+
+        .commodity-ticker {
+          display: flex;
+          justify-content: flex-end;
+          gap: 24px;
+          padding: 8px 24px;
+          background: linear-gradient(90deg, #1a1a2e 0%, #16213e 100%);
+          border-bottom: 1px solid #0f3460;
+        }
+
+        .commodity-item {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+        }
+
+        .commodity-icon {
+          font-size: 16px;
+        }
+
+        .commodity-name {
+          font-size: 12px;
+          font-weight: 600;
+          color: #9ca3af;
+        }
+
+        .commodity-price {
+          font-size: 13px;
+          font-weight: 700;
+          color: #fff;
+        }
+
+        .commodity-change {
+          font-size: 12px;
+          font-weight: 600;
+          padding: 2px 6px;
+          border-radius: 4px;
+        }
+
+        .commodity-change.positive {
+          background: rgba(74, 222, 128, 0.2);
+          color: #4ade80;
+        }
+
+        .commodity-change.negative {
+          background: rgba(248, 113, 113, 0.2);
+          color: #f87171;
+        }
+
+        .commodity-unit {
+          font-size: 10px;
+          color: #6b7280;
         }
 
         .header-left {
@@ -441,6 +526,34 @@ export default function Home() {
             order: 3;
             width: 100%;
             justify-content: center;
+          }
+
+          .commodity-ticker {
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 8px 12px;
+          }
+
+          .commodity-item {
+            gap: 4px;
+          }
+
+          .commodity-name {
+            font-size: 10px;
+          }
+
+          .commodity-price {
+            font-size: 11px;
+          }
+
+          .commodity-change {
+            font-size: 10px;
+            padding: 1px 4px;
+          }
+
+          .commodity-unit {
+            display: none;
           }
 
           .legend-bar {
