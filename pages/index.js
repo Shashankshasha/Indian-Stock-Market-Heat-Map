@@ -162,6 +162,10 @@ export default function Home() {
               <span className="logo-icon">📊</span>
               <span className="logo-text">Stock Heat Map</span>
             </div>
+            <nav className="main-nav">
+              <Link href="/" className="nav-link active">Indices</Link>
+              <Link href="/realty" className="nav-link">Realty</Link>
+            </nav>
           </div>
           <div className="header-center">
             <span className="streaming-label">Streaming</span>
@@ -304,6 +308,34 @@ export default function Home() {
           gap: 12px;
         }
 
+        .header-left {
+          display: flex;
+          align-items: center;
+          gap: 24px;
+        }
+
+        .main-nav {
+          display: flex;
+          gap: 16px;
+        }
+
+        .main-nav :global(.nav-link) {
+          color: #666;
+          text-decoration: none;
+          font-weight: 500;
+          font-size: 14px;
+          padding: 4px 8px;
+        }
+
+        .main-nav :global(.nav-link:hover) {
+          color: #333;
+        }
+
+        .main-nav :global(.nav-link.active) {
+          color: #d32f2f;
+          font-weight: 600;
+        }
+
         .commodity-ticker {
           display: flex;
           justify-content: flex-end;
@@ -355,11 +387,6 @@ export default function Home() {
         .commodity-unit {
           font-size: 10px;
           color: #6b7280;
-        }
-
-        .header-left {
-          display: flex;
-          align-items: center;
         }
 
         .logo {
